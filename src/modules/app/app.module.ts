@@ -18,7 +18,10 @@ import { EventsModule } from '../../business/events/events.module';
       useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('DB_URL');
         console.log(`Intentando conectar a MongoDB en: ${uri}`);
-        return { uri };
+        return { 
+          uri,
+          family: 4, // Fuerza el uso de IPv4 (soluciona el error ECONNREFUSED de SRV en Node.js)
+        };
       },
       inject: [ConfigService],
     }),
