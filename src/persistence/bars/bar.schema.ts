@@ -2,9 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class EventDocument extends Document {
+export class BarDocument extends Document {
   @Prop({ required: true })
   name: string;
+
+  @Prop()
+  description: string;
 
   @Prop()
   location: string;
@@ -23,6 +26,9 @@ export class EventDocument extends Document {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ required: true, unique: true })
+  hash_identificador: string;
 }
 
-export const EventSchema = SchemaFactory.createForClass(EventDocument);
+export const BarSchema = SchemaFactory.createForClass(BarDocument);

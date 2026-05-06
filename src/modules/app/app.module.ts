@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { envValidationSchema } from 'src/config/env-validation';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EventsModule } from '../../business/events/events.module';
+import { BarsModule } from '../../business/bars/bars.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { EventsModule } from '../../business/events/events.module';
       },
       inject: [ConfigService],
     }),
-    EventsModule,
+    BarsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
