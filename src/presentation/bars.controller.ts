@@ -10,9 +10,7 @@ import { Bar } from '../business/bars/bar';
 export class BarsController {
   constructor(
     private readonly barsService: BarsService,
-    // Inyectamos el repositorio solo para el endpoint de validación rápida
-    @Inject(BAR_REPOSITORY) private readonly barRepo: IBarRepository
-    
+    @Inject(BAR_REPOSITORY) private readonly barRepo: IBarRepository 
   ) {}
 
   @Get()
