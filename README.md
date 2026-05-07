@@ -18,6 +18,15 @@
 - 🏗️ **Clean Architecture:** Backend estructurado en capas estandarizadas (Presentación, Negocio, Persistencia) garantizando alta escalabilidad, modularidad y bajo acoplamiento.
 - 🗑️ **Soft Delete:** Borrado lógico (`isActive: false`) en lugar de eliminación física para preservar el historial y la integridad de los datos.
 - 🎨 **Dashboard Interactivo:** Interfaz gráfica reactiva con filtrado dinámico por categorías, búsqueda en tiempo real, edición en sitio y desactivación de registros.
+- - 📢 **Notificaciones por Slack:** Se envían alertas automáticas por Slack únicamente cuando se detectan e ingresan nuevos bares (se omiten las modificaciones) durante la ejecución del workflow de scraping.
+
+
+
+## 🎥 Demostración del Flujo de Trabajo
+
+A continuación, puedes ver un video explicativo donde se detalla el flujo de trabajo completo de la aplicación, incluyendo el scraping automatizado y la gestión desde el dashboard:
+
+[![Demostración ZOCO Bares](https://img.youtube.com/vi/XfQRkzKJQ6A/0.jpg)](https://www.youtube.com/watch?v=XfQRkzKJQ6A)
 
 ---
 
