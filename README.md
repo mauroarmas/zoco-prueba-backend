@@ -9,16 +9,7 @@
   </p>
 </div>
 
-## 📖 Sobre el Proyecto
 
-**Zoco** es un sistema integral diseñado para recolectar, procesar y mostrar información sobre bares y eventos. Nace con el propósito de centralizar la movida tucumana mediante la ingesta automática de datos (vía web scraping) y un panel de administración intuitivo.
-
-El proyecto está dividido en tres pilares fundamentales:
-1. **Frontend (React + Tailwind CSS):** Un dashboard moderno para visualizar, buscar, filtrar y gestionar los bares.
-2. **Backend (NestJS + MongoDB):** Una API RESTful robusta bajo principios de Clean Architecture que maneja la lógica de negocio y la persistencia de datos.
-3. **Automatización (n8n):** Flujos de trabajo automatizados para el scraping de información externa, integrados directamente con el backend.
-
----
 
 ## ✨ Características Principales
 
@@ -30,23 +21,13 @@ El proyecto está dividido en tres pilares fundamentales:
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Stack Tecnológico
 
-### Frontend
-- **Framework:** React (inicializado con Vite)
-- **Estilos:** Tailwind CSS
-- **Integración:** Fetch API / Axios para consumo REST
+El proyecto está dividido en tres pilares fundamentales:
+1. **Frontend (React + Tailwind CSS):** Un dashboard moderno para visualizar, buscar, filtrar y gestionar los bares.
+2. **Backend (NestJS + MongoDB):** Una API RESTful robusta bajo principios de Clean Architecture que maneja la lógica de negocio y la persistencia de datos.
+3. **Automatización (n8n):** Flujos de trabajo automatizados para el scraping de información externa, integrados directamente con el backend.
 
-### Backend
-- **Framework:** NestJS (TypeScript)
-- **Base de Datos:** MongoDB Atlas
-- **ODM:** Mongoose
-- **Patrones:** Repositorio, Inyección de Dependencias, DTOs
-
-### Automatización
-- **Scraping & Workflows:** n8n
-
----
 
 ## 📂 Estructura del Proyecto
 
@@ -54,7 +35,8 @@ El proyecto está dividido en tres pilares fundamentales:
 ZOCO-PROJECT/
 ├── zoco-backend/                 # API RESTful (NestJS)
 │   ├── src/
-│   │   ├── business/             # Lógica de Negocio (Modelos de Dominio, Servicios)
+│   │   ├── business/             # Lógica de Negocio (Modelos de Dominio)
+        │   ├── entitys/service   # Entidades y Clases del sistema, así como sus servicios
 │   │   ├── persistence/          # Capa de Datos (Mongoose Schemas, Repositorios)
 │   │   ├── presentation/         # Controladores REST, DTOs
 │   │   └── config/               # Variables de Entorno y Configuración
