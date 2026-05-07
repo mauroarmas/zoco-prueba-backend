@@ -6,6 +6,7 @@
   <br />
   <p>
     <strong>Repositorio Frontend:</strong> <a href="https://github.com/mauroarmas/zoco-prueba-frontend">mauroarmas/zoco-prueba-frontend</a>
+    <strong>Export del flujo de trabajo:</strong> <p>Dentro del directorio raíz del proyecto, archivo "zocoWorkflow-n8n.json</p>
   </p>
 </div>
 
@@ -18,9 +19,8 @@
 - 🏗️ **Clean Architecture:** Backend estructurado en capas estandarizadas (Presentación, Negocio, Persistencia) garantizando alta escalabilidad, modularidad y bajo acoplamiento.
 - 🗑️ **Soft Delete:** Borrado lógico (`isActive: false`) en lugar de eliminación física para preservar el historial y la integridad de los datos.
 - 🎨 **Dashboard Interactivo:** Interfaz gráfica reactiva con filtrado dinámico por categorías, búsqueda en tiempo real, edición en sitio y desactivación de registros.
-- - 📢 **Notificaciones por Slack:** Se envían alertas automáticas por Slack únicamente cuando se detectan e ingresan nuevos bares (se omiten las modificaciones) durante la ejecución del workflow de scraping.
-
-
+- 📢 **Notificaciones por Slack:** Se envían alertas automáticas por Slack únicamente cuando se detectan e ingresan nuevos bares (se omiten las modificaciones) durante la ejecución del workflow de scraping.
+- ✨ **Categorización de Bares y autocompletado de descripciones:** Se envían las descripciones inconclusas de los bares a la api de Gemini y esta la completa brevemente y categoriza a los bares.
 
 ## 🎥 Demostración del Flujo de Trabajo
 
@@ -63,46 +63,6 @@ ZOCO-PROJECT/
 
 ---
 
-## 🚀 Instalación y Despliegue Local
-
-### Requisitos Previos
-- Node.js (v18+)
-- MongoDB Atlas (URI de conexión)
-- n8n (Instancia Local o Cloud)
-
-### 1. Configuración del Backend
-
-```bash
-cd zoco-backend
-npm install
-```
-
-Crea un archivo `.env` en la raíz de `zoco-backend` con las siguientes variables:
-```env
-MONGO_URI=tu_mongodb_atlas_uri
-PORT=4000
-```
-
-Inicia el servidor en modo desarrollo:
-```bash
-npm run start
-# La API correrá en http://localhost:4000
-```
-
-### 2. Configuración del Frontend
-
-Puedes encontrar el código fuente y las instrucciones de instalación detalladas del frontend en su propio repositorio:
-👉 [https://github.com/mauroarmas/zoco-prueba-frontend](https://github.com/mauroarmas/zoco-prueba-frontend)
-
-### 3. Configuración de n8n
-
-1. Asegúrate de tener una instancia de n8n corriendo.
-2. Ve a la interfaz de n8n y crea un nuevo workflow.
-3. Arriba a la derecha, haz clic en el menú (tres puntos) y selecciona **Import from File**.
-4. Selecciona el archivo `zocoWorkflow-n8n.json` ubicado en la raíz de este repositorio.
-5. Activa el workflow para habilitar el scraping automático.
-
----
 
 ## 📡 Endpoints Principales de la API
 
@@ -119,8 +79,21 @@ La API expone sus servicios REST bajo el prefijo configurado (por ejemplo, para 
 
 ---
 
-## 🧠 Decisiones de Arquitectura Clave
+## 🧠 Decisiones de Arquitectura Clave (Criterio Técnico)
 
+- **Evitación de Duplicados mediante Normalización de Nombres (Hash Generador):** Antes de guardar o procesar en la Base de Datos, la API toma el nombre ingresado, elimina tildes, caracteres especiales y "palabras vacías" o *stop words* ("el", "la", "de", "tucuman", etc.) para generar un identificador único seguro (slug). Gracias a esto, textos como *"El Bar de Homero"* y *"Bar Homero"* se resuelven automáticamente como la misma entidad, evitando de raíz datos duplicados durante el scraping.
+- **Sistema escalable:** 
+- - Escalaría este sistema con la funcionalidad de traer bares de distintas provincias, usaría otra API (por ejemplo google maps) para este propósito.
+- - También añadiria verificaciones de la existencia de bares, por ejemplo busqueda en redes sociales o mensajes automatizados a la misma con el propósito de saber si todavía trabajan, muchos de los bares cargados son antiguos.
+- - Añadiría un bot que obtenga la carta de los bares actualizada de los bares que la tengan disponible, para mostrar precios actualizados y hacer busquedas de productos (pizzas, hamburguesas, etc..) para comparar precios de las distintas opciones.
+- - Implementaria un filtrado por ubicación, donde según desde dónde esté consultando muestre bares cercanos a un radio personalizado.
+- **Problemas posibles del flujo**:
+- - **Alta dependencia a la página web**: Para el scrapping se hace selección de etiquetas CSS, si estas o su html son cambiados el flujo se rompería o si el dominio de la página es modificado.
+- - **Alta dependencia de la API Google Gemini**: Si el LLM presenta alucinaciones puede categorizar mal los bares o si este no está disponible el flujo no podría ejecutarse.
+- **Mejora de calidad de datos:**
+- - **Estandarización de ubicaciones:** Actualmente el sistema obtiene ubicaciones como "San Miguel de Tucumán" o "Octaviano Vera 894" que son imprecisas. Conectaría el flujo de n8n a la API de Google Maps para convertir esos strings de texto en coordenadas geoespaciales exactas (latitud y longitud) o direcciones estandarizadas que esta API entrega.
+- - **Ampliación de descripciones:** Haría que el agente entre a cada uno de los bares (no se quede solo con la card) y obtenga más datos que la página web proporciona.
+- - **Bot de comunicación con los propietarios:** Si en la página existe un contacto, lo usaria para enviar por ejemplo Whatsapps para que haciendo preguntas específicas pueda recolectar información más rica.
 - **Desacoplamiento Frontend/Scraping:** El frontend de React **nunca** se comunica directamente con n8n. Toda petición pasa obligatoriamente por el backend NestJS (Arquitectura Cliente-Servidor clásica) para garantizar seguridad, aplicar rate limits y centralizar la validación de datos.
-- **Normalización de Nombres (Hash Generador):** Antes de guardar o procesar en la Base de Datos, la API toma el nombre ingresado, elimina tildes, caracteres especiales y "palabras vacías" o *stop words* ("el", "la", "de", "tucuman", etc.) para generar un identificador único seguro (slug). Gracias a esto, textos como *"El Bar de Homero"* y *"Bar Homero"* se resuelven automáticamente como la misma entidad, evitando de raíz datos duplicados durante el scraping.
 - **Clean Architecture en NestJS:** La separación estricta entre `Presentation` (Controladores), `Business` (Servicios, Dominio) y `Persistence` (Mongoose) asegura que si el día de mañana se cambia MongoDB por PostgreSQL, la lógica de negocio y los controladores quedarán totalmente intactos.
+
