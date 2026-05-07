@@ -3,6 +3,10 @@
 <div align="center">
   <h3>Sistema Automatizado de Gestión de Bares y Eventos en Tucumán</h3>
   <p>Una plataforma end-to-end con arquitectura limpia, frontend moderno y automatización de scraping de datos.</p>
+  <br />
+  <p>
+    <strong>Repositorio Frontend:</strong> <a href="https://github.com/mauroarmas/zoco-prueba-frontend">mauroarmas/zoco-prueba-frontend</a>
+  </p>
 </div>
 
 ## 📖 Sobre el Proyecto
@@ -56,15 +60,14 @@ ZOCO-PROJECT/
 │   │   └── config/               # Variables de Entorno y Configuración
 │   └── package.json
 │
-├── zoco-frontend/                # Cliente Web (React)
-│   ├── zoco-frontend/
-│   │   ├── src/
-│   │   │   ├── components/       # Componentes UI (Dashboard, BarCard)
-│   │   │   ├── App.jsx           # Componente Root
-│   │   │   └── index.css         # Tailwind Directives
-│   │   └── package.json
+├── zoco-frontend/                # Cliente Web (React) - [Ver Repositorio](https://github.com/mauroarmas/zoco-prueba-frontend)
+│   ├── src/
+│   │   ├── components/       # Componentes UI (Dashboard, BarCard)
+│   │   ├── App.jsx           # Componente Root
+│   │   └── index.css         # Tailwind Directives
+│   └── package.json
 │
-└── n8n/                          # (Opcional) Exportación de Workflows
+└── zocoWorkflow-n8n.json         # Workflow exportado de n8n (Scraping)
 ```
 
 ---
@@ -97,16 +100,16 @@ npm run start
 
 ### 2. Configuración del Frontend
 
-```bash
-cd zoco-frontend/zoco-frontend
-npm install
-```
+Puedes encontrar el código fuente y las instrucciones de instalación detalladas del frontend en su propio repositorio:
+👉 [https://github.com/mauroarmas/zoco-prueba-frontend](https://github.com/mauroarmas/zoco-prueba-frontend)
 
-Inicia el servidor de desarrollo de Vite:
-```bash
-npm run dev
-# El dashboard correrá en http://localhost:5173
-```
+### 3. Configuración de n8n
+
+1. Asegúrate de tener una instancia de n8n corriendo.
+2. Ve a la interfaz de n8n y crea un nuevo workflow.
+3. Arriba a la derecha, haz clic en el menú (tres puntos) y selecciona **Import from File**.
+4. Selecciona el archivo `zocoWorkflow-n8n.json` ubicado en la raíz de este repositorio.
+5. Activa el workflow para habilitar el scraping automático.
 
 ---
 
