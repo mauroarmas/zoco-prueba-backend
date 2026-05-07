@@ -40,4 +40,9 @@ export class BarsController {
     const success = await this.barsService.deleteBar(id);
     return { success };
   }
+
+  @Post('/trigger-scraping')
+  async triggerScraping(@Body() body: { pageNumber: number }) {
+    return this.barsService.triggerScraping(body.pageNumber);
+  }
 }

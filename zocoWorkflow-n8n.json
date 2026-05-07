@@ -1,0 +1,425 @@
+{
+  "name": "zoco",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        384
+      ],
+      "id": "eddd25bf-890c-4665-9131-65991b8d436f",
+      "name": "Cron Automatico (6hs)"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hacer-scraping",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        208
+      ],
+      "id": "824d3420-8dcb-4bf4-99eb-2fa26c700685",
+      "name": "Webhook On-Demand",
+      "webhookId": "ee558524-9e76-430d-9408-69ba0bd940f0"
+    },
+    {
+      "parameters": {
+        "url": "=https://lanochedelasbirrerias.com.ar/page/{{ $json.body?.pagina || 1 }}/?s&business_category&business_location=capital-tucuman",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        432,
+        304
+      ],
+      "id": "d669171e-7193-42ed-a80b-3f9f354eae95",
+      "name": "Descargar HTML"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "name",
+              "cssSelector": "[itemprop=\"name\"]",
+              "returnArray": true
+            },
+            {
+              "key": "location",
+              "cssSelector": "meta[itemprop=\"streetAddress\"]",
+              "returnValue": "attribute",
+              "attribute": "content",
+              "returnArray": true
+            },
+            {
+              "key": "description",
+              "cssSelector": "[itemprop=\"description\"]",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        304
+      ],
+      "id": "adee8431-3b48-408a-a435-a3ec7c1939f4",
+      "name": "Extraer Nodos del DOM para scraping"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst resultados = [];\n\n// Iteramos sobre la longitud del arreglo de nombres\nfor (let i = 0; i < data.name.length; i++) {\n  resultados.push({\n    json: {\n      name: data.name[i],\n      location: data.location[i],\n      description: data.description[i]\n    }\n  });\n}\n\n// Retornamos un arreglo de items individuales para n8n\nreturn resultados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        304
+      ],
+      "id": "872ab9a2-d514-44bd-b51b-305cb269902b",
+      "name": "Separar Bares"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "description",
+              "renameField": true,
+              "outputFieldName": "bares"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        432,
+        528
+      ],
+      "id": "84a387da-c9bc-4244-9062-4959d4964b44",
+      "name": "Agrupar descripciones"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres un sistema de procesamiento de datos. A continuación, te proporciono un array JSON con locales gastronómicos de Tucumán:\n\n{{ JSON.stringify($json.bares) }}\n\nTu tarea es leer \"description\" de cada uno y asignarle una de estas categorías: Cervecería, Sándwichería, Hamburguesería, Restaurant, Pizzería o Bar Tradicional. Y además si notas que la descripción está inconclusa completala de forma corta.\n\nDEVUELVE ÚNICAMENTE un Array JSON válido con esta estructura exacta para todos los locales:\n[\n{\n\"name\": \"Nombre del local original\",\n\"location\": \"Ubicación original\",\n\"description\": \"Descripción original\",\n\"category\": \"Categoría asignada\"\n}\n]"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        528
+      ],
+      "id": "5ca5b28d-941b-498f-845d-7f34a84fddf4",
+      "name": "Clasificación de categoria",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "P7qDsn3ylg9jy9RF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Navegamos por el objeto anidado que nos devolvió Gemini\n// hasta llegar al string de texto que contiene nuestro JSON\nconst textoRespuesta = $input.first().json.content.parts[0].text;\n\nconst textoLimpio = textoRespuesta.replace(/```json\\n?|```/g, '');\n\nconst arrayBares = JSON.parse(textoLimpio);\n\nconst itemsSeparados = [];\n\n// 4. Transformamos cada bar en un Item individual para n8n\nfor (const bar of arrayBares) {\n  itemsSeparados.push({\n    json: bar\n  });\n}\n\nreturn itemsSeparados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        528
+      ],
+      "id": "e32021a2-8dd7-4e8a-bd67-327b8ede9960",
+      "name": "Limpiar Salida"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/bars",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.description }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $json.location }}"
+            },
+            {
+              "name": "category",
+              "value": "={{ $json.category }}"
+            },
+            {
+              "name": "source",
+              "value": "La Noche de las Birrerías"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        528
+      ],
+      "id": "e07617cf-6d17-4597-9cca-87a57dc031e9",
+      "name": "Insertar/Actualizar en Backend"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "62be0d24-be46-4820-8ab9-51c3873ba3ca",
+              "leftValue": "={{ $json.isNewRecord }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1552,
+        528
+      ],
+      "id": "defa8ee0-a31b-42ed-820b-a28f0b28fdfa",
+      "name": "¿Bar Nuevo?"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        704
+      ],
+      "id": "9ffe552f-9b30-4ea4-8b7d-48b3dbf712d0",
+      "name": "Agrupar Bares Nuevos"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#alertas-scrapping-zoco",
+          "mode": "name"
+        },
+        "text": "=🚀 *¡Reporte de Scraping: La Noche de las Birrerías!* 🚀 Se han detectado y guardado nuevos locales en la base de datos: \n• {{ $json.data.map(item => item.name).join('\\n• ') }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1968,
+        704
+      ],
+      "id": "5cb2c0f9-5553-4d06-b44e-3b3c2a5c14a4",
+      "name": "Alertar Scrapping de bares nuevos",
+      "webhookId": "5cd7cd2a-621e-4d02-a20b-25b207247b27",
+      "credentials": {
+        "slackApi": {
+          "id": "d1gMhwPgXzdehc3w",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron Automatico (6hs)": {
+      "main": [
+        [
+          {
+            "node": "Descargar HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook On-Demand": {
+      "main": [
+        [
+          {
+            "node": "Descargar HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar HTML": {
+      "main": [
+        [
+          {
+            "node": "Extraer Nodos del DOM para scraping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Nodos del DOM para scraping": {
+      "main": [
+        [
+          {
+            "node": "Separar Bares",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar Bares": {
+      "main": [
+        [
+          {
+            "node": "Agrupar descripciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar descripciones": {
+      "main": [
+        [
+          {
+            "node": "Clasificación de categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificación de categoria": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Salida": {
+      "main": [
+        [
+          {
+            "node": "Insertar/Actualizar en Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar/Actualizar en Backend": {
+      "main": [
+        [
+          {
+            "node": "¿Bar Nuevo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Bar Nuevo?": {
+      "main": [
+        [
+          {
+            "node": "Agrupar Bares Nuevos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar Bares Nuevos": {
+      "main": [
+        [
+          {
+            "node": "Alertar Scrapping de bares nuevos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5ea3948f-5877-47d8-9c59-5673f2650b86",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bca2ba10f4578cd66bd68a9ba139e36db57fe77199196026d849e1e914dea5c"
+  },
+  "id": "oGBGMEKHdZFjEl2X",
+  "tags": []
+}

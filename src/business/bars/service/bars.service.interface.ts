@@ -8,4 +8,5 @@ export interface IBarsService {
   createBar(data: CreateBarDto): Promise<Bar>;
   updateBar(id: string, data: UpdateBarDto): Promise<Bar | null>;
   deleteBar(id: string): Promise<boolean>;
+  triggerScraping(pageNumber: number): Promise<any>;
 }
